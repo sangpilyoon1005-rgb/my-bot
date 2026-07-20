@@ -7,7 +7,7 @@ import random
 from discord.ui import View
 from discord import app_commands
 
-TOKEN = "MTUwOTkzMjQ5Nzk5NDEyNTQ0Mg.GPrcuP.wx9RLR2ak3USC30rLtqN_oENgpXEDbzPgPq70Q"
+TOKEN = os.environ.get('DISCORD_TOKEN')
 
 intents = discord.Intents.default()
 
