@@ -9,6 +9,9 @@ from discord.ext import commands
 from discord import app_commands
 import aiohttp
 from aiohttp import web
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # =========================
 # 🔑 TOKEN
