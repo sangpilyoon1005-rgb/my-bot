@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 # =========================
 # 🔑 TOKEN
 # =========================
@@ -26,8 +27,6 @@ DATA_FILE = "data.json"
 
 
 
-
-
 # =========================
 # 🤖 디스코드 설정
 # =========================
@@ -38,15 +37,10 @@ intents.guilds = True
 intents.message_content = True
 
 
-
 bot = commands.Bot(
     command_prefix="!",
     intents=intents
 )
-
-
-
-
 
 
 
@@ -55,7 +49,6 @@ bot = commands.Bot(
 # =========================
 
 ROLE_BUFFS = {
-
 
     "🌱 여름 기초자": {
 
@@ -96,10 +89,6 @@ ROLE_BUFFS = {
 
 
 
-
-
-
-
 # =========================
 # 데이터 불러오기
 # =========================
@@ -118,9 +107,6 @@ def load_data():
 
 
     return {}
-
-
-
 
 
 
@@ -148,24 +134,18 @@ def save_data(data):
 
 
 
-
-
-
 # =========================
 # 유저 생성
 # =========================
 
 def get_user(data, user_id):
 
-
     uid = str(user_id)
-
 
 
     if uid not in data:
 
         data[uid] = {}
-
 
 
 
@@ -189,7 +169,6 @@ def get_user(data, user_id):
 
 
 
-
     for key, value in default.items():
 
         if key not in data[uid]:
@@ -204,14 +183,11 @@ def get_user(data, user_id):
 
 
 
-
-
 # =========================
 # 역할 버프 확인
 # =========================
 
 def get_role_buff(member):
-
 
     for role in member.roles[::-1]:
 
@@ -234,17 +210,12 @@ def get_role_buff(member):
 
 
 
-
-
-
-
 # =========================
 # 봇 시작
 # =========================
 
 @bot.event
 async def on_ready():
-
 
     synced = await bot.tree.sync()
 
@@ -258,7 +229,9 @@ async def on_ready():
         f"{len(synced)}개 명령어 등록 완료"
     )
 
-    # =========================
+
+
+# =========================
 # 📅 출석 시스템
 # =========================
 
@@ -282,7 +255,6 @@ async def attendance(
     today = str(date.today())
 
 
-
     if data[user]["last_attendance"] == today:
 
         await interaction.response.send_message(
@@ -293,10 +265,6 @@ async def attendance(
         return
 
 
-
-
-
-    # 역할 보너스
 
     buff = get_role_buff(
         interaction.user
@@ -315,9 +283,6 @@ async def attendance(
 
 
 
-
-
-
     data[user]["last_attendance"] = today
 
     data[user]["attendance"] += 1
@@ -325,9 +290,6 @@ async def attendance(
     data[user]["coins"] += total_coin
 
     data[user]["summer_box"] += 1
-
-
-
 
 
 
@@ -343,8 +305,6 @@ async def attendance(
 
 
 
-
-
     if bonus > 0:
 
         msg += f"""
@@ -355,11 +315,6 @@ async def attendance(
 """
 
 
-
-
-
-
-    # 7일 보상
 
     if data[user]["attendance"] == 7:
 
@@ -375,12 +330,6 @@ async def attendance(
 
 
 
-
-
-
-
-    # 30일 보상
-
     if data[user]["attendance"] == 30:
 
         data[user]["legend_box"] += 1
@@ -395,8 +344,6 @@ async def attendance(
 
 
 
-
-
     save_data(data)
 
 
@@ -404,13 +351,6 @@ async def attendance(
     await interaction.response.send_message(
         msg
     )
-
-
-
-
-
-
-
 
 # =========================
 # 🪙 코인 확인
@@ -449,7 +389,9 @@ async def coin(
 
     )
 
-    # =========================
+
+
+# =========================
 # 📦 상자 확인
 # =========================
 
@@ -484,8 +426,6 @@ async def box(
 🌈 레전드 상자 : {data[user]["legend_box"]}개
 """
     )
-
-
 
 
 
@@ -538,12 +478,9 @@ async def open_box(
 
 
 
-
-
     # =====================
-    # 📦 상자 차감 먼저
+    # 📦 여름 상자
     # =====================
-
 
     if box_type == "summer":
 
@@ -581,6 +518,9 @@ async def open_box(
 
 
 
+    # =====================
+    # 🟨 황금 상자
+    # =====================
 
     elif box_type == "gold":
 
@@ -616,7 +556,9 @@ async def open_box(
 
 
 
-
+    # =====================
+    # 🌈 레전드 상자
+    # =====================
 
     elif box_type == "legend":
 
@@ -650,8 +592,6 @@ async def open_box(
 
 
 
-
-
     reward = random.choice(
         rewards
     )
@@ -661,7 +601,7 @@ async def open_box(
 
 
     # =====================
-    # 보상 지급
+    # 🎁 보상 지급
     # =====================
 
 
@@ -707,9 +647,7 @@ async def open_box(
 
 
 
-
     save_data(data)
-
 
 
 
@@ -724,14 +662,6 @@ async def open_box(
 {result}
 """
     )
-
-
-
-
-
-
-
-
 
 # =========================
 # 🎒 인벤토리
@@ -780,7 +710,11 @@ async def inventory(
 """
     )
 
-    # =========================
+
+
+
+
+# =========================
 # 🏖️ 상점 목록
 # =========================
 
@@ -789,76 +723,109 @@ SHOP_ITEMS = {
 
 
     "🌱 여름 기초자": {
+
         "price":50,
+
         "type":"role",
+
         "role":"🌱 여름 기초자"
+
     },
 
 
     "🏝️ 여름 여행자": {
+
         "price":200,
+
         "type":"role",
+
         "role":"🏝️ 여름 여행자"
+
     },
 
 
     "🌊 바다": {
+
         "price":600,
+
         "type":"role",
+
         "role":"🌊 바다"
+
     },
 
 
     "✨ 윤슬": {
+
         "price":750,
+
         "type":"role",
+
         "role":"✨ 윤슬"
+
     },
 
 
     "🎨 역할 색상권": {
+
         "price":500,
+
         "type":"item"
+
     },
 
 
     "✨ 닉네임 꾸미기권": {
+
         "price":400,
+
         "type":"item"
+
     },
 
 
     "🏷️ 개인 채널 꾸미기권": {
+
         "price":700,
+
         "type":"item"
+
     },
 
 
     "📦 여름 상자": {
+
         "price":100,
+
         "type":"box",
+
         "box":"summer_box"
+
     },
 
 
     "🟨 황금 상자": {
+
         "price":300,
+
         "type":"box",
+
         "box":"gold_box"
+
     },
 
 
     "🌈 레전드 상자": {
+
         "price":700,
+
         "type":"box",
+
         "box":"legend_box"
+
     }
 
 }
-
-
-
-
 
 
 
@@ -878,8 +845,11 @@ class ShopButton(discord.ui.Button):
 
 
         super().__init__(
+
             label=item,
+
             style=discord.ButtonStyle.primary
+
         )
 
 
@@ -914,8 +884,11 @@ class ShopButton(discord.ui.Button):
 
 
         price = int(
+
             item["price"] *
+
             (1 - buff["shop_discount"])
+
         )
 
 
@@ -949,9 +922,14 @@ class ShopButton(discord.ui.Button):
 
 
             role = discord.utils.find(
-    lambda r: r.name == item["role"],
-    interaction.guild.roles
-)
+
+                lambda r: r.name == item["role"],
+
+                interaction.guild.roles
+
+            )
+
+
 
             if role is None:
 
@@ -972,9 +950,13 @@ class ShopButton(discord.ui.Button):
 
             try:
 
+
                 await interaction.user.add_roles(
+
                     role
+
                 )
+
 
 
             except discord.Forbidden:
@@ -990,12 +972,6 @@ class ShopButton(discord.ui.Button):
                 )
 
                 return
-
-
-
-
-
-
 
         # =====================
         # 아이템 구매
@@ -1014,8 +990,6 @@ class ShopButton(discord.ui.Button):
 
 
 
-
-
         # =====================
         # 상자 구매
         # =====================
@@ -1025,7 +999,6 @@ class ShopButton(discord.ui.Button):
 
 
             data[user][item["box"]] += 1
-
 
 
 
@@ -1060,9 +1033,6 @@ class ShopButton(discord.ui.Button):
 
 
 
-
-
-
 # =========================
 # 상점 UI
 # =========================
@@ -1090,8 +1060,6 @@ class ShopView(discord.ui.View):
 
 
 
-
-
 # =========================
 # 🏖️ 상점 명령어
 # =========================
@@ -1112,12 +1080,14 @@ async def shop(
 
         description="""
 
+
 🌴 역할
 
 🌱 여름 기초자 - 50
 🏝️ 여름 여행자 - 200
 🌊 바다 - 600
 ✨ 윤슬 - 750
+
 
 
 🎨 아이템
@@ -1127,6 +1097,7 @@ async def shop(
 🏷️ 개인 채널 꾸미기권 - 700
 
 
+
 📦 상자
 
 📦 여름 상자 - 100
@@ -1134,13 +1105,16 @@ async def shop(
 🌈 레전드 상자 - 700
 
 
+
 ✨ 역할 보유자는 할인 적용
+
 
 """,
 
         color=discord.Color.blue()
 
     )
+
 
 
 
@@ -1152,27 +1126,36 @@ async def shop(
 
     )
 
-    # =========================
+
+
+
+
+# =========================
 # 💰 판매 가격표
 # =========================
 
+
 SELL_PRICE = {
+
 
     "🎨 역할 색상권":300,
 
+
     "✨ 닉네임 꾸미기권":250,
+
 
     "🏷️ 개인 채널 꾸미기권":400,
 
+
     "🌊 바다 역할권":300,
 
+
     "✨ 윤슬 역할권":400,
+
 
     "🎁 특별 보상권":500
 
 }
-
-
 
 
 
@@ -1208,18 +1191,21 @@ async def sell(
 
 
 
-    # 이름 일부 입력 허용
-
     find_item = None
+
 
 
     for inv_item in data[user]["inventory"]:
 
+
         if 아이템.strip() in inv_item:
+
 
             find_item = inv_item
 
+
             break
+
 
 
 
@@ -1247,32 +1233,36 @@ async def sell(
 
 
 
-    # 판매 가격
-
     price = SELL_PRICE.get(
+
         item,
+
         100
+
     )
 
 
 
 
 
-
-
-    # 역할별 수수료
 
     buff = get_role_buff(
+
         interaction.user
+
     )
+
 
 
     fee_rate = buff["sell_fee"]
 
 
 
+
     fee = int(
+
         price * fee_rate
+
     )
 
 
@@ -1283,20 +1273,18 @@ async def sell(
 
 
 
-
-
-    # =====================
-    # 아이템 제거 먼저
-    # =====================
-
-
     if item in data[user]["inventory"]:
 
+
         data[user]["inventory"].remove(
+
             item
+
         )
 
+
     else:
+
 
         await interaction.response.send_message(
 
@@ -1312,17 +1300,11 @@ async def sell(
 
 
 
-
-
-    # 코인 지급
-
     data[user]["coins"] += receive
 
 
 
     save_data(data)
-
-
 
 
 
@@ -1355,7 +1337,7 @@ async def sell(
 """
     )
 
-    # =========================
+# =========================
 # 👑 관리자 코인 지급
 # =========================
 
@@ -1392,8 +1374,6 @@ async def give_coin(
         f"✅ {유저.mention}님에게 🪙 {코인}코인 지급 완료"
 
     )
-
-
 
 
 
@@ -1445,8 +1425,6 @@ async def remove_coin(
         f"✅ {유저.mention}님의 🪙 {코인}코인 회수 완료"
 
     )
-
-
 
 
 
@@ -1532,7 +1510,6 @@ async def give_box(
 
 
 
-
 # =========================
 # 👤 유저 정보
 # =========================
@@ -1561,11 +1538,15 @@ async def user_info(
 
 
     items = (
+
         "\n".join(
             data[user]["inventory"]
         )
+
         if data[user]["inventory"]
+
         else "없음"
+
     )
 
 
@@ -1596,9 +1577,6 @@ async def user_info(
 {items}
 """
     )
-
-
-
 
 
 
@@ -1664,7 +1642,6 @@ async def help_command(
 
 
 
-
 # =========================
 # ⚠️ 오류 처리
 # =========================
@@ -1708,8 +1685,6 @@ async def command_error(
 # =========================
 
 
-# 여기에 /사용 코드 붙이기
-
+# 여기에 TOKEN 입력
 
 bot.run(os.environ['TOKEN'])
-
