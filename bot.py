@@ -550,7 +550,6 @@ async def open_box(
             return
         data[user]["summer_box"] -= 1
 
-        # (아이템 이름, 타입, 값/수량, 확률 weight)
         pool = [
             ("🪙 여름 코인 20개", "coin", 20, 35),
             ("🪙 여름 코인 50개", "coin", 50, 25),
@@ -558,7 +557,7 @@ async def open_box(
             ("🎨 역할 색상권", "item", 0, 8),
             ("✨ 닉네임 꾸미기권", "item", 0, 7),
             ("📦 여름 상자 1개", "box", "summer_box", 5),
-            ("🍀 행운 티켓", "ticket", 1, 5), # 황금 티켓으로 통합 적립
+            ("🍀 행운 티켓", "ticket", 1, 5),
         ]
 
     elif box_type == "gold":
@@ -598,10 +597,8 @@ async def open_box(
     weights = [p[3] for p in pool]
     selected_tuple = random.choices(choices, weights=weights, k=1)[0]
     
-    # 선택된 보상 상세 정보 찾기
     reward = next(p for p in pool if p[0] == selected_tuple)
 
-    # 보상 지급 처리
     if reward[1] == "coin":
         buff = get_role_buff(interaction.user)
         bonus = int(reward[2] * buff["coin_bonus"])
@@ -701,7 +698,7 @@ async def lucky_dice(interaction: discord.Interaction):
 
 
 # =========================
-# 📊 확률 안내 (/확률)
+# 📊 확률 안내 (/확률) - 전체 공개
 # =========================
 
 @bot.tree.command(
@@ -736,7 +733,7 @@ async def drop_rates(interaction: discord.Interaction):
         inline=False
     )
 
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    await interaction.response.send_message(embed=embed)
 
 
 # =========================
