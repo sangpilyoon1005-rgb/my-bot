@@ -7,20 +7,14 @@ import discord
 from datetime import date
 from discord.ext import commands
 from discord import app_commands
-import aiohttp
-from aiohttp import web
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
 # =========================
-# 🔑 TOKEN
-# =========================
-
-
-# =========================
-# 💾 데이터
+# 🔑 데이터 설정
 # =========================
 
 DATA_FILE = "data.json"
@@ -90,7 +84,7 @@ ROLE_BUFFS = {
 
 
 # =========================
-# 데이터 불러오기
+# 💾 데이터 불러오기
 # =========================
 
 def load_data():
@@ -112,7 +106,7 @@ def load_data():
 
 
 # =========================
-# 데이터 저장
+# 💾 데이터 저장
 # =========================
 
 def save_data(data):
@@ -133,9 +127,8 @@ def save_data(data):
 
 
 
-
 # =========================
-# 유저 생성
+# 👤 유저 생성
 # =========================
 
 def get_user(data, user_id):
@@ -169,7 +162,7 @@ def get_user(data, user_id):
 
 
 
-    for key, value in default.items():
+    for key,value in default.items():
 
         if key not in data[uid]:
 
@@ -182,12 +175,12 @@ def get_user(data, user_id):
 
 
 
-
 # =========================
-# 역할 버프 확인
+# 🌴 역할 버프 확인
 # =========================
 
 def get_role_buff(member):
+
 
     for role in member.roles[::-1]:
 
@@ -209,221 +202,227 @@ def get_role_buff(member):
 
 
 
+# =========================
+# 🎁 상자 확률 데이터
+# =========================
+
+BOX_REWARDS = {
+
+
+    "summer":[
+
+        {
+            "name":"🪙 여름 코인 20개",
+            "type":"coin",
+            "value":20,
+            "prob":40
+        },
+
+        {
+            "name":"🪙 여름 코인 50개",
+            "type":"coin",
+            "value":50,
+            "prob":30
+        },
+
+        {
+            "name":"🪙 여름 코인 100개",
+            "type":"coin",
+            "value":100,
+            "prob":20
+        },
+
+        {
+            "name":"🎨 역할 색상권",
+            "type":"item",
+            "value":0,
+            "prob":7
+        },
+
+        {
+            "name":"✨ 닉네임 꾸미기권",
+            "type":"item",
+            "value":0,
+            "prob":3
+        }
+
+    ],
+
+
+
+    "gold":[
+
+        {
+            "name":"🪙 여름 코인 200개",
+            "type":"coin",
+            "value":200,
+            "prob":40
+        },
+
+        {
+            "name":"🪙 여름 코인 300개",
+            "type":"coin",
+            "value":300,
+            "prob":30
+        },
+
+        {
+            "name":"🌊 바다 역할권",
+            "type":"item",
+            "value":0,
+            "prob":20
+        },
+
+        {
+            "name":"🏷️ 개인 채널 꾸미기권",
+            "type":"item",
+            "value":0,
+            "prob":10
+        }
+
+    ],
+
+
+
+    "legend":[
+
+        {
+            "name":"🪙 여름 코인 1000개",
+            "type":"coin",
+            "value":1000,
+            "prob":50
+        },
+
+        {
+            "name":"✨ 윤슬 역할권",
+            "type":"item",
+            "value":0,
+            "prob":25
+        },
+
+        {
+            "name":"🎁 특별 보상권",
+            "type":"item",
+            "value":0,
+            "prob":25
+        }
+
+    ]
+
+}
 
 # =========================
-# 봇 시작
+# 🎁 상자 열기 + 확률 시스템
 # =========================
 
-@bot.event
-async def on_ready():
 
-    synced = await bot.tree.sync()
+BOX_PROBABILITY = {
 
+    "summer": [
 
-    print(
-        f"{bot.user} 로그인 완료!"
-    )
+        ("🪙 여름 코인 20개", 40),
+        ("🪙 여름 코인 50개", 30),
+        ("🪙 여름 코인 100개", 15),
+        ("🎨 역할 색상권", 10),
+        ("✨ 닉네임 꾸미기권", 5)
 
-
-    print(
-        f"{len(synced)}개 명령어 등록 완료"
-    )
+    ],
 
 
+    "gold": [
 
-# =========================
-# 📅 출석 시스템
-# =========================
+        ("🪙 여름 코인 200개", 40),
+        ("🪙 여름 코인 300개", 25),
+        ("🌊 바다 역할권", 20),
+        ("🏷️ 개인 채널 꾸미기권", 15)
+
+    ],
+
+
+    "legend": [
+
+        ("🪙 여름 코인 1000개", 50),
+        ("✨ 윤슬 역할권", 30),
+        ("🎁 특별 보상권", 20)
+
+    ]
+
+}
+
+
+
+def get_box_reward(box):
+
+    rewards = BOX_PROBABILITY[box]
+
+    names = []
+
+    weights = []
+
+
+    for name, chance in rewards:
+
+        names.append(name)
+
+        weights.append(chance)
+
+
+    return random.choices(
+        names,
+        weights=weights,
+        k=1
+    )[0]
+
+
+
 
 
 @bot.tree.command(
-    name="출석",
-    description="여름 이벤트 출석"
+    name="확률",
+    description="상자 보상 확률 공개"
 )
-async def attendance(
+async def probability(
     interaction: discord.Interaction
 ):
 
-    data = load_data()
-
-    user = get_user(
-        data,
-        interaction.user.id
-    )
-
-
-    today = str(date.today())
-
-
-    if data[user]["last_attendance"] == today:
-
-        await interaction.response.send_message(
-            "❌ 오늘은 이미 출석했습니다.",
-            ephemeral=True
-        )
-
-        return
-
-
-
-    buff = get_role_buff(
-        interaction.user
-    )
-
-
-    base_coin = 10
-
-
-    bonus = int(
-        base_coin * buff["coin_bonus"]
-    )
-
-
-    total_coin = base_coin + bonus
-
-
-
-    data[user]["last_attendance"] = today
-
-    data[user]["attendance"] += 1
-
-    data[user]["coins"] += total_coin
-
-    data[user]["summer_box"] += 1
-
-
-
-    msg = f"""
-🌴 출석 완료!
-
-🪙 여름 코인 +{total_coin}
-📦 여름 상자 +1
-
-📅 출석:
-{data[user]["attendance"]}일
-"""
-
-
-
-    if bonus > 0:
-
-        msg += f"""
-
-✨ 역할 보너스
-
-추가 코인 +{bonus}
-"""
-
-
-
-    if data[user]["attendance"] == 7:
-
-        data[user]["gold_box"] += 1
-
-
-        msg += """
-
-🟨 7일 달성!
-
-황금 상자 +1
-"""
-
-
-
-    if data[user]["attendance"] == 30:
-
-        data[user]["legend_box"] += 1
-
-
-        msg += """
-
-🌈 30일 달성!
-
-레전드 상자 +1
-"""
-
-
-
-    save_data(data)
-
-
-
-    await interaction.response.send_message(
-        msg
-    )
-
-# =========================
-# 🪙 코인 확인
-# =========================
-
-
-@bot.tree.command(
-    name="코인",
-    description="보유 코인 확인"
-)
-async def coin(
-    interaction: discord.Interaction
-):
-
-    data = load_data()
-
-
-    user = get_user(
-        data,
-        interaction.user.id
-    )
-
-
-    save_data(data)
-
-
-
     await interaction.response.send_message(
 
-        f"""
-🪙 **{interaction.user.display_name}님의 여름 코인**
+        """
+🎁 **SEOLYE SUMMER BOT 상자 확률표**
 
-보유량:
-{data[user]["coins"]}개
-"""
+━━━━━━━━━━━━━━
 
-    )
+📦 여름 상자
 
-
-
-# =========================
-# 📦 상자 확인
-# =========================
+🪙 여름 코인 20개 — 40%
+🪙 여름 코인 50개 — 30%
+🪙 여름 코인 100개 — 15%
+🎨 역할 색상권 — 10%
+✨ 닉네임 꾸미기권 — 5%
 
 
-@bot.tree.command(
-    name="상자",
-    description="보유 상자 확인"
-)
-async def box(
-    interaction: discord.Interaction
-):
+━━━━━━━━━━━━━━
 
-    data = load_data()
+🟨 황금 상자
 
-    user = get_user(
-        data,
-        interaction.user.id
-    )
+🪙 여름 코인 200개 — 40%
+🪙 여름 코인 300개 — 25%
+🌊 바다 역할권 — 20%
+🏷️ 개인 채널 꾸미기권 — 15%
 
 
-    save_data(data)
+━━━━━━━━━━━━━━
+
+🌈 레전드 상자
+
+🪙 여름 코인 1000개 — 50%
+✨ 윤슬 역할권 — 30%
+🎁 특별 보상권 — 20%
 
 
-    await interaction.response.send_message(
-        f"""
-📦 **보유 상자**
+━━━━━━━━━━━━━━
 
-📦 여름 상자 : {data[user]["summer_box"]}개
-
-🟨 황금 상자 : {data[user]["gold_box"]}개
-
-🌈 레전드 상자 : {data[user]["legend_box"]}개
+🍀 행운을 빌어요!
 """
     )
 
@@ -431,9 +430,7 @@ async def box(
 
 
 
-# =========================
-# 🎁 상자 열기
-# =========================
+
 
 
 @bot.tree.command(
@@ -468,6 +465,7 @@ async def open_box(
 
     data = load_data()
 
+
     user = get_user(
         data,
         interaction.user.id
@@ -478,134 +476,65 @@ async def open_box(
 
 
 
-    # =====================
-    # 📦 여름 상자
-    # =====================
+    box_key = {
 
-    if box_type == "summer":
+        "summer":"summer_box",
+        "gold":"gold_box",
+        "legend":"legend_box"
 
-
-        if data[user]["summer_box"] <= 0:
-
-            await interaction.response.send_message(
-                "❌ 여름 상자가 없습니다.",
-                ephemeral=True
-            )
-
-            return
+    }
 
 
 
-        data[user]["summer_box"] -= 1
+    key = box_key[box_type]
 
 
 
-        rewards = [
+    if data[user][key] <= 0:
 
-            ("🪙 여름 코인 20개","coin",20),
+        await interaction.response.send_message(
 
-            ("🪙 여름 코인 50개","coin",50),
+            "❌ 해당 상자가 없습니다.",
 
-            ("🪙 여름 코인 100개","coin",100),
+            ephemeral=True
 
-            ("🎨 역할 색상권","item",0),
+        )
 
-            ("✨ 닉네임 꾸미기권","item",0)
-
-        ]
+        return
 
 
 
+    # 상자 차감
 
-
-    # =====================
-    # 🟨 황금 상자
-    # =====================
-
-    elif box_type == "gold":
-
-
-        if data[user]["gold_box"] <= 0:
-
-            await interaction.response.send_message(
-                "❌ 황금 상자가 없습니다.",
-                ephemeral=True
-            )
-
-            return
+    data[user][key] -= 1
 
 
 
-        data[user]["gold_box"] -= 1
-
-
-
-        rewards = [
-
-            ("🪙 여름 코인 200개","coin",200),
-
-            ("🪙 여름 코인 300개","coin",300),
-
-            ("🌊 바다 역할권","item",0),
-
-            ("🏷️ 개인 채널 꾸미기권","item",0)
-
-        ]
-
-
-
-
-
-    # =====================
-    # 🌈 레전드 상자
-    # =====================
-
-    elif box_type == "legend":
-
-
-        if data[user]["legend_box"] <= 0:
-
-            await interaction.response.send_message(
-                "❌ 레전드 상자가 없습니다.",
-                ephemeral=True
-            )
-
-            return
-
-
-
-        data[user]["legend_box"] -= 1
-
-
-
-        rewards = [
-
-            ("🪙 여름 코인 1000개","coin",1000),
-
-            ("✨ 윤슬 역할권","item",0),
-
-            ("🎁 특별 보상권","item",0)
-
-        ]
-
-
-
-
-
-    reward = random.choice(
-        rewards
+    reward_name = get_box_reward(
+        box_type
     )
 
 
 
+    # 코인 보상 처리
+
+    coin_rewards = {
+
+        "🪙 여름 코인 20개":20,
+        "🪙 여름 코인 50개":50,
+        "🪙 여름 코인 100개":100,
+        "🪙 여름 코인 200개":200,
+        "🪙 여름 코인 300개":300,
+        "🪙 여름 코인 1000개":1000
+
+    }
 
 
-    # =====================
-    # 🎁 보상 지급
-    # =====================
+
+    if reward_name in coin_rewards:
 
 
-    if reward[1] == "coin":
+        amount = coin_rewards[reward_name]
 
 
         buff = get_role_buff(
@@ -614,22 +543,27 @@ async def open_box(
 
 
         bonus = int(
-            reward[2] * buff["coin_bonus"]
+            amount * buff["coin_bonus"]
         )
 
 
-        total = reward[2] + bonus
+        total = amount + bonus
 
 
         data[user]["coins"] += total
 
 
 
-        result = (
-            f"{reward[0]}\n"
-            f"✨ 역할 보너스 +{bonus}코인\n"
-            f"총 획득 {total}코인"
-        )
+        result = f"""
+
+{reward_name}
+
+✨ 역할 보너스 +{bonus}코인
+
+총 획득:
+{total}코인
+
+"""
 
 
 
@@ -637,12 +571,11 @@ async def open_box(
 
 
         data[user]["inventory"].append(
-            reward[0]
+            reward_name
         )
 
 
-        result = reward[0]
-
+        result = reward_name
 
 
 
@@ -651,17 +584,21 @@ async def open_box(
 
 
 
-
     await interaction.response.send_message(
 
         f"""
 🎁 **{종류.name} 개봉!**
 
-획득 보상:
+획득 보상
 
 {result}
 """
+
     )
+
+
+
+
 
 # =========================
 # 🎒 인벤토리
@@ -679,25 +616,24 @@ async def inventory(
 
     data = load_data()
 
+
     user = get_user(
         data,
         interaction.user.id
     )
 
 
-    save_data(data)
+    items = data[user]["inventory"]
 
 
 
-    if len(data[user]["inventory"]) == 0:
+    if not items:
 
         text = "없음"
 
     else:
 
-        text = "\n".join(
-            data[user]["inventory"]
-        )
+        text = "\n".join(items)
 
 
 
@@ -708,14 +644,11 @@ async def inventory(
 
 {text}
 """
+
     )
 
-
-
-
-
 # =========================
-# 🏖️ 상점 목록
+# 🏖️ 상점 시스템
 # =========================
 
 
@@ -831,6 +764,8 @@ SHOP_ITEMS = {
 
 
 
+
+
 # =========================
 # 🛒 상점 버튼
 # =========================
@@ -840,6 +775,7 @@ class ShopButton(discord.ui.Button):
 
 
     def __init__(self, item):
+
 
         self.item_name = item
 
@@ -855,6 +791,7 @@ class ShopButton(discord.ui.Button):
 
 
 
+
     async def callback(
         self,
         interaction: discord.Interaction
@@ -863,24 +800,27 @@ class ShopButton(discord.ui.Button):
 
         data = load_data()
 
+
         user = get_user(
+
             data,
+
             interaction.user.id
+
         )
 
 
 
-        item = SHOP_ITEMS[
-            self.item_name
-        ]
+        item = SHOP_ITEMS[self.item_name]
 
 
-
-        # 할인 적용
 
         buff = get_role_buff(
+
             interaction.user
+
         )
+
 
 
         price = int(
@@ -892,9 +832,6 @@ class ShopButton(discord.ui.Button):
         )
 
 
-
-
-        # 코인 부족
 
         if data[user]["coins"] < price:
 
@@ -913,9 +850,7 @@ class ShopButton(discord.ui.Button):
 
 
 
-        # =====================
         # 역할 구매
-        # =====================
 
 
         if item["type"] == "role":
@@ -923,7 +858,8 @@ class ShopButton(discord.ui.Button):
 
             role = discord.utils.find(
 
-                lambda r: r.name == item["role"],
+                lambda r:
+                r.name == item["role"],
 
                 interaction.guild.roles
 
@@ -936,8 +872,7 @@ class ShopButton(discord.ui.Button):
 
                 await interaction.response.send_message(
 
-                    f"❌ 서버에 `{item['role']}` 역할이 없습니다.\n"
-                    "역할을 먼저 만들어주세요.",
+                    "❌ 서버에 역할이 없습니다.",
 
                     ephemeral=True
 
@@ -958,14 +893,12 @@ class ShopButton(discord.ui.Button):
                 )
 
 
-
             except discord.Forbidden:
 
 
                 await interaction.response.send_message(
 
-                    "❌ 봇 역할이 구매 역할보다 낮습니다.\n"
-                    "서버 설정 → 역할에서 봇 역할을 올려주세요.",
+                    "❌ 봇 역할 순서를 올려주세요.",
 
                     ephemeral=True
 
@@ -973,16 +906,20 @@ class ShopButton(discord.ui.Button):
 
                 return
 
-        # =====================
+
+
+
+
         # 아이템 구매
-        # =====================
 
 
         elif item["type"] == "item":
 
 
             data[user]["inventory"].append(
+
                 self.item_name
+
             )
 
 
@@ -990,9 +927,7 @@ class ShopButton(discord.ui.Button):
 
 
 
-        # =====================
         # 상자 구매
-        # =====================
 
 
         elif item["type"] == "box":
@@ -1004,8 +939,8 @@ class ShopButton(discord.ui.Button):
 
 
 
-
         data[user]["coins"] -= price
+
 
 
         save_data(data)
@@ -1013,10 +948,10 @@ class ShopButton(discord.ui.Button):
 
 
 
-
         await interaction.response.send_message(
 
             f"""
+
 🎉 구매 완료!
 
 상품:
@@ -1025,8 +960,11 @@ class ShopButton(discord.ui.Button):
 
 🪙 사용 코인:
 {price}개
+
 """
+
         )
+
 
 
 
@@ -1044,14 +982,19 @@ class ShopView(discord.ui.View):
     def __init__(self):
 
         super().__init__(
+
             timeout=120
+
         )
 
 
         for item in SHOP_ITEMS:
 
+
             self.add_item(
+
                 ShopButton(item)
+
             )
 
 
@@ -1066,11 +1009,16 @@ class ShopView(discord.ui.View):
 
 
 @bot.tree.command(
+
     name="상점",
+
     description="여름 코인 상점"
+
 )
 async def shop(
+
     interaction: discord.Interaction
+
 ):
 
 
@@ -1080,14 +1028,12 @@ async def shop(
 
         description="""
 
-
 🌴 역할
 
 🌱 여름 기초자 - 50
 🏝️ 여름 여행자 - 200
 🌊 바다 - 600
 ✨ 윤슬 - 750
-
 
 
 🎨 아이템
@@ -1097,7 +1043,6 @@ async def shop(
 🏷️ 개인 채널 꾸미기권 - 700
 
 
-
 📦 상자
 
 📦 여름 상자 - 100
@@ -1105,16 +1050,13 @@ async def shop(
 🌈 레전드 상자 - 700
 
 
-
 ✨ 역할 보유자는 할인 적용
-
 
 """,
 
         color=discord.Color.blue()
 
     )
-
 
 
 
@@ -1126,32 +1068,22 @@ async def shop(
 
     )
 
-
-
-
-
 # =========================
-# 💰 판매 가격표
+# 💰 판매 시스템
 # =========================
 
 
 SELL_PRICE = {
 
-
     "🎨 역할 색상권":300,
-
 
     "✨ 닉네임 꾸미기권":250,
 
-
     "🏷️ 개인 채널 꾸미기권":400,
-
 
     "🌊 바다 역할권":300,
 
-
     "✨ 윤슬 역할권":400,
-
 
     "🎁 특별 보상권":500
 
@@ -1159,12 +1091,6 @@ SELL_PRICE = {
 
 
 
-
-
-
-# =========================
-# 💰 판매
-# =========================
 
 
 @bot.tree.command(
@@ -1184,10 +1110,12 @@ async def sell(
 
 
     user = get_user(
-        data,
-        interaction.user.id
-    )
 
+        data,
+
+        interaction.user.id
+
+    )
 
 
 
@@ -1202,7 +1130,6 @@ async def sell(
 
 
             find_item = inv_item
-
 
             break
 
@@ -1226,22 +1153,14 @@ async def sell(
 
 
 
-    item = find_item
-
-
-
-
-
 
     price = SELL_PRICE.get(
 
-        item,
+        find_item,
 
         100
 
     )
-
-
 
 
 
@@ -1254,14 +1173,9 @@ async def sell(
 
 
 
-    fee_rate = buff["sell_fee"]
-
-
-
-
     fee = int(
 
-        price * fee_rate
+        price * buff["sell_fee"]
 
     )
 
@@ -1273,30 +1187,11 @@ async def sell(
 
 
 
-    if item in data[user]["inventory"]:
+    data[user]["inventory"].remove(
 
+        find_item
 
-        data[user]["inventory"].remove(
-
-            item
-
-        )
-
-
-    else:
-
-
-        await interaction.response.send_message(
-
-            "❌ 판매 처리 오류",
-
-            ephemeral=True
-
-        )
-
-        return
-
-
+    )
 
 
 
@@ -1309,16 +1204,16 @@ async def sell(
 
 
 
-
     await interaction.response.send_message(
 
         f"""
+
 💰 판매 완료!
 
 
 📦 아이템
 
-{item}
+{find_item}
 
 
 💵 판매 가격
@@ -1334,8 +1229,18 @@ async def sell(
 ✅ 획득
 
 {receive} 코인
+
 """
+
     )
+
+
+
+
+
+
+
+
 
 # =========================
 # 👑 관리자 코인 지급
@@ -1350,22 +1255,33 @@ async def sell(
     administrator=True
 )
 async def give_coin(
+
     interaction: discord.Interaction,
+
     유저: discord.Member,
-    코인: int
+
+    코인:int
+
 ):
+
 
     data = load_data()
 
+
     user = get_user(
+
         data,
+
         유저.id
+
     )
 
 
     data[user]["coins"] += 코인
 
+
     save_data(data)
+
 
 
 
@@ -1374,6 +1290,9 @@ async def give_coin(
         f"✅ {유저.mention}님에게 🪙 {코인}코인 지급 완료"
 
     )
+
+
+
 
 
 
@@ -1393,9 +1312,13 @@ async def give_coin(
     administrator=True
 )
 async def remove_coin(
+
     interaction: discord.Interaction,
+
     유저: discord.Member,
+
     코인:int
+
 ):
 
 
@@ -1403,15 +1326,21 @@ async def remove_coin(
 
 
     user = get_user(
+
         data,
+
         유저.id
+
     )
 
 
 
     data[user]["coins"] = max(
+
         0,
+
         data[user]["coins"] - 코인
+
     )
 
 
@@ -1420,11 +1349,14 @@ async def remove_coin(
 
 
 
+
     await interaction.response.send_message(
 
         f"✅ {유저.mention}님의 🪙 {코인}코인 회수 완료"
 
     )
+
+
 
 
 
@@ -1445,10 +1377,15 @@ async def remove_coin(
     administrator=True
 )
 async def give_box(
+
     interaction: discord.Interaction,
+
     유저: discord.Member,
+
     종류:str,
+
     개수:int
+
 ):
 
 
@@ -1456,8 +1393,11 @@ async def give_box(
 
 
     user = get_user(
+
         data,
+
         유저.id
+
     )
 
 
@@ -1480,9 +1420,12 @@ async def give_box(
 
     else:
 
+
         await interaction.response.send_message(
 
-            "❌ 여름 / 황금 / 레전드 중 입력해주세요."
+            "❌ 여름 / 황금 / 레전드 중 입력해주세요.",
+
+            ephemeral=True
 
         )
 
@@ -1510,6 +1453,7 @@ async def give_box(
 
 
 
+
 # =========================
 # 👤 유저 정보
 # =========================
@@ -1523,8 +1467,11 @@ async def give_box(
     administrator=True
 )
 async def user_info(
+
     interaction: discord.Interaction,
+
     유저: discord.Member
+
 ):
 
 
@@ -1532,9 +1479,13 @@ async def user_info(
 
 
     user = get_user(
+
         data,
+
         유저.id
+
     )
+
 
 
     items = (
@@ -1551,37 +1502,40 @@ async def user_info(
 
 
 
+
     await interaction.response.send_message(
 
         f"""
+
 👤 {유저.display_name}
 
 
 🪙 코인
+
 {data[user]["coins"]}
 
 
 📦 상자
 
 📦 여름 : {data[user]["summer_box"]}
+
 🟨 황금 : {data[user]["gold_box"]}
+
 🌈 레전드 : {data[user]["legend_box"]}
 
 
 📅 출석
+
 {data[user]["attendance"]}일
 
 
 🎒 인벤토리
 
 {items}
+
 """
+
     )
-
-
-
-
-
 
 # =========================
 # ❓ 도움말
@@ -1613,6 +1567,7 @@ async def help_command(
 
 /상자
 /상자열기
+/확률
 
 
 🎒 아이템
@@ -1634,7 +1589,10 @@ async def help_command(
 /유저정보
 
 """
+
     )
+
+
 
 
 
@@ -1649,14 +1607,20 @@ async def help_command(
 
 @bot.tree.error
 async def command_error(
+
     interaction: discord.Interaction,
+
     error
+
 ):
 
 
     if isinstance(
+
         error,
+
         app_commands.errors.MissingPermissions
+
     ):
 
 
@@ -1672,7 +1636,13 @@ async def command_error(
 
 
 
-    print(error)
+    print(
+
+        error
+
+    )
+
+
 
 
 
@@ -1685,6 +1655,6 @@ async def command_error(
 # =========================
 
 
-# 여기에 TOKEN 입력
-
-bot.run(os.environ['TOKEN'])
+bot.run(
+    os.environ["TOKEN"]
+)
